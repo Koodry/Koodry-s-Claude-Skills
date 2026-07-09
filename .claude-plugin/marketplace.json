@@ -1,0 +1,14 @@
+{
+  "name": "writer-skills-marketplace",
+  "owner": {
+    "name": "Alexandr"
+  },
+  "description": "Скиллы для работы над художественной книгой",
+  "plugins": [
+    {
+      "name": "writer-skills",
+      "source": "./writer-skills",
+      "description": "Карточки персонажей, разбор сюжета, проверка логики поступков, диагностика слога, куратор файлов проекта и судья фитов по ChaosGacha"
+    }
+  ]
+}

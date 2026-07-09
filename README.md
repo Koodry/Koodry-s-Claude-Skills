@@ -2,7 +2,20 @@
 
 Набор скиллов для работы над художественной книгой. 6 скиллов.
 
-Структура: `source/` — распакованные исходники (SKILL.md + assets/references), `packed/` — запакованные `.skill` файлы для установки.
+Структура: `source/` — распакованные исходники (SKILL.md + assets/references), `packed/` — запакованные `.skill` файлы для установки, `writer-skills/` — те же 6 скиллов, упакованные в единый плагин `writer-skills`.
+
+## Установка для команды
+
+Этот репозиторий — plugin marketplace. Подключить один раз:
+
+```
+/plugin marketplace add Koodry/Koodry-s-Claude-Skills
+/plugin install writer-skills@writer-skills-marketplace
+```
+
+Обновления после `git push` в репозиторий подтягиваются командой `/plugin marketplace update`.
+
+Альтернатива без marketplace: взять любой `.skill` файл из `packed/` и установить его напрямую.
 
 ## Скиллы
 

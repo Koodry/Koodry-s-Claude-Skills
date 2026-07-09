@@ -1,0 +1,9 @@
+{
+  "name": "writer-skills",
+  "version": "0.1.0",
+  "description": "Набор скиллов для работы над художественной книгой: карточки персонажей, разбор сюжета, проверка логики поступков, диагностика слога, куратор файлов проекта и судья фитов по ChaosGacha.",
+  "author": {
+    "name": "Alexandr"
+  },
+  "keywords": ["writing", "fiction", "editing", "worldbuilding"]
+}
