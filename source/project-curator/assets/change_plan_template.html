@@ -1,0 +1,79 @@
+<!-- Шаблон артефакта «План правок на ревью» (показывается ДО применения).
+     Замени плейсхолдер /*PLAN_DATA*/ на JS-объект:
+       { title:"Реорганизация проекта",
+         items:[ {id:"1", type:"Перенос блока|Перемещение файла|Ссылки|Дубль|Стиль|Memory",
+                  summary:"одна строка сути", from:"откуда", to:"куда",
+                  detail:"что останется указателем / индекс / детали"}, ... ] }
+     Передай весь HTML как widget_code в show_widget.
+     Кнопка собирает отмеченные id и шлёт их через sendPrompt(text). -->
+<h2 class="sr-only">План предлагаемых правок по файлам проекта: отметьте, что применять</h2>
+<div id="cp-root" style="padding:0.5rem 0;color:var(--color-text-primary);font-family:var(--font-sans)">
+  <style>
+    #cp-root h3{font-size:18px;font-weight:500;margin:0 0 2px}
+    #cp-root .sub{color:var(--color-text-secondary);font-size:13px;margin:0 0 14px}
+    #cp-root .grp{font-size:12px;color:var(--color-text-tertiary);margin:16px 0 6px}
+    #cp-root .item{border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:10px 12px;margin:0 0 8px;background:var(--color-background-secondary)}
+    #cp-root .item.off{opacity:.45}
+    #cp-root .row{display:flex;gap:10px;align-items:flex-start}
+    #cp-root .sum{font-weight:500;font-size:14px}
+    #cp-root .meta{font-family:var(--font-mono);font-size:12px;color:var(--color-text-secondary);margin-top:3px;word-break:break-all}
+    #cp-root .arrow{color:var(--color-text-info)}
+    #cp-root .detail{font-size:12.5px;color:var(--color-text-secondary);margin-top:5px}
+    #cp-root input[type=checkbox]{margin-top:3px;transform:scale(1.15)}
+    #cp-root .actions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 6px}
+    #cp-root button{font:inherit;font-size:14px;padding:9px 16px;border-radius:var(--border-radius-md);border:1px solid var(--color-border-secondary);cursor:pointer;background:var(--color-background-primary);color:var(--color-text-primary)}
+    #cp-root button.primary{background:var(--color-text-info);color:var(--color-background-primary);border-color:var(--color-text-info)}
+    #cp-root .bar{font-size:13px;color:var(--color-text-secondary);margin-left:auto;align-self:center}
+    #cp-root textarea{width:100%;box-sizing:border-box;min-height:54px;border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px;font:inherit;font-size:13px;margin-top:4px;background:var(--color-background-primary);color:var(--color-text-primary)}
+  </style>
+  <h3 id="cp-title"></h3>
+  <p class="sub">Отметь, что применять. Снятые галочки не трогаются. Ничего не изменится, пока не нажмёшь «Применить отмеченные».</p>
+  <div id="cp-list"></div>
+  <textarea id="cp-note" placeholder="Заметка/правка к плану своими словами (необязательно)"></textarea>
+  <div class="actions">
+    <button class="primary" id="cp-apply">Применить отмеченные</button>
+    <button id="cp-all">Отметить всё</button>
+    <button id="cp-none">Снять всё</button>
+    <button id="cp-cancel">Ничего не делать</button>
+    <span class="bar" id="cp-count"></span>
+  </div>
+</div>
+<script>
+(function(){
+  const DATA=/*PLAN_DATA*/;
+  const root=document.getElementById('cp-root');
+  document.getElementById('cp-title').textContent=DATA.title||'План правок';
+  const esc=s=>(s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const items=DATA.items||[];const list=document.getElementById('cp-list');const groups={};
+  items.forEach(it=>{(groups[it.type||'Прочее']=groups[it.type||'Прочее']||[]).push(it);});
+  Object.keys(groups).forEach(g=>{
+    const h=document.createElement('div');h.className='grp';h.textContent=g;list.appendChild(h);
+    groups[g].forEach(it=>{
+      const d=document.createElement('div');d.className='item';d.dataset.id=it.id;
+      const fromto=(it.from||it.to)?('<div class="meta">'+esc(it.from||'')+(it.to?' <span class="arrow">&rarr;</span> '+esc(it.to):'')+'</div>'):'';
+      d.innerHTML='<div class="row"><input type="checkbox" checked data-id="'+esc(it.id)+'">'
+        +'<div><div class="sum">'+esc(it.summary||'')+'</div>'+fromto
+        +(it.detail?'<div class="detail">'+esc(it.detail)+'</div>':'')+'</div></div>';
+      list.appendChild(d);
+    });
+  });
+  const cbs=()=>[...root.querySelectorAll('input[type=checkbox]')];
+  function refresh(){cbs().forEach(c=>c.closest('.item').classList.toggle('off',!c.checked));
+    document.getElementById('cp-count').textContent='Отмечено: '+cbs().filter(c=>c.checked).length+' / '+items.length;}
+  root.addEventListener('change',refresh);refresh();
+  document.getElementById('cp-all').onclick=()=>{cbs().forEach(c=>c.checked=true);refresh();};
+  document.getElementById('cp-none').onclick=()=>{cbs().forEach(c=>c.checked=false);refresh();};
+  document.getElementById('cp-apply').onclick=()=>{
+    const ids=cbs().filter(c=>c.checked).map(c=>c.dataset.id);
+    const note=document.getElementById('cp-note').value.trim();
+    if(!ids.length&&!note){alert('Ничего не отмечено.');return;}
+    let msg='ПРИМЕНИТЬ ПЛАН. Одобренные пункты (id): '+(ids.join(', ')||'нет')+'. Остальные не трогать.';
+    if(note)msg+=' Заметка автора: '+note;
+    if(typeof sendPrompt==='function')sendPrompt(msg);else alert(msg);
+  };
+  document.getElementById('cp-cancel').onclick=()=>{
+    const msg='Не применять план — оставить всё как есть.';
+    if(typeof sendPrompt==='function')sendPrompt(msg);else alert(msg);
+  };
+})();
+</script>
